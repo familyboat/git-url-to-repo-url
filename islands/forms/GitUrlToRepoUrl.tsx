@@ -1,4 +1,5 @@
 import { useSignal } from "@preact/signals";
+import List from "../../components/List.tsx";
 
 export type RepoUrl = {
   type: string;
@@ -21,30 +22,34 @@ export default function GitUrlToRepoUrl() {
       return;
     }
 
-    const url = new URL(gitUrl);
-    const { pathname } = url;
-    const parts = pathname.split("/");
+    try {
+      const url = new URL(gitUrl);
+      const { pathname } = url;
+      const parts = pathname.split("/");
 
-    if (parts.length !== 3) {
-      updateRepoUrls([]);
+      if (parts.length !== 3) {
+        updateRepoUrls([]);
+        return;
+      }
+
+      const user = parts[1];
+      const repo = parts[2];
+
+      const ssh = {
+        type: "ssh",
+        url: `git@${url.host}:${user}/${repo}.git`,
+      };
+
+      const https = {
+        type: "https",
+        url: `https://${url.host}/${user}/${repo}.git`,
+      };
+
+      updateRepoUrls([ssh, https]);
       return;
+    } catch (_e) {
+      alert("There is something wrong, please type again!");
     }
-
-    const user = parts[1];
-    const repo = parts[2];
-
-    const ssh = {
-      type: "ssh",
-      url: `git@${url.host}:${user}/${repo}.git`,
-    };
-
-    const https = {
-      type: "https",
-      url: `https://${url.host}/${user}/${repo}.git`,
-    };
-
-    updateRepoUrls([ssh, https]);
-    return;
   }
 
   function handleInput(e: Event) {
@@ -80,26 +85,10 @@ export default function GitUrlToRepoUrl() {
           {repoUrlsSignal.value.map((repoUrl) => {
             const { type, url } = repoUrl;
             return (
-              <li
-                key={type}
-                class="flex items-center justify-between border-2 border-gray-300 rounded-md p-2 m-2"
-              >
-                <span>
-                  {type}:
-                </span>
-                <span>
-                  {url}
-                </span>
-                <button
-                  type="button"
-                  class="bg-green-500 text-white rounded-md p-2 m-2 hover:bg-green-700"
-                  onClick={() => {
-                    navigator.clipboard.writeText(url);
-                  }}
-                >
-                  copy
-                </button>
-              </li>
+              <List
+                type={type}
+                url={url}
+              />
             );
           })}
         </ul>
