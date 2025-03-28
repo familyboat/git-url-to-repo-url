@@ -32,5 +32,3 @@ jobs:
           project: "git-url-to-repo-url-coral"
           entrypoint: "main.ts"
           root: "."
-          
-          

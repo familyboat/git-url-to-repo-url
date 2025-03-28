@@ -1,5 +1,6 @@
 import { type RepoUrl } from "../islands/forms/GitUrlToRepoUrl.tsx";
 import { useSignal } from "@preact/signals";
+import { throttle } from "@std/async/unstable-throttle";
 
 export default function List({ type, url }: RepoUrl) {
   const buttonStatus = useSignal<"normal" | "success" | "error">("normal");
@@ -12,6 +13,21 @@ export default function List({ type, url }: RepoUrl) {
         return "fail";
       case "success":
         return "success";
+    }
+  }
+
+  async function handleClick() {
+    if (buttonStatus.value !== "normal") return;
+
+    try {
+      await navigator.clipboard.writeText(url);
+      buttonStatus.value = "success";
+    } catch (_e) {
+      buttonStatus.value = "error";
+    } finally {
+      setTimeout(() => {
+        buttonStatus.value = "normal";
+      }, 1500);
     }
   }
 
@@ -28,21 +44,8 @@ export default function List({ type, url }: RepoUrl) {
       </span>
       <button
         type="button"
-        class="bg-green-500 text-white rounded-md p-2 m-2 hover:bg-green-700"
-        onClick={async () => {
-          if (buttonStatus.value !== "normal") return;
-
-          try {
-            await navigator.clipboard.writeText(url);
-            buttonStatus.value = "success";
-          } catch (_e) {
-            buttonStatus.value = "error";
-          } finally {
-            setTimeout(() => {
-              buttonStatus.value = "normal";
-            }, 600);
-          }
-        }}
+        class="bg-green-500 text-white rounded-md p-2 m-2 hover:bg-green-700 transition-all"
+        onClick={throttle(handleClick, 1800)}
         disabled={buttonStatus.value !== "normal"}
       >
         {getButtonText()}
